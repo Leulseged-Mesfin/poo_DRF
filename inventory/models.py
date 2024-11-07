@@ -1,6 +1,10 @@
 from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete, pre_save
+from django.db.models import UniqueConstraint
+from django.core.exceptions import ValidationError
+
+
 
 
 class Category(models.Model):
@@ -20,9 +24,14 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.IntegerField(null=True, blank=True)
+    stock = models.PositiveIntegerField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['name', 'category'], name='unique_product_category')
+        ]
 
     def __str__(self):
         return self.name

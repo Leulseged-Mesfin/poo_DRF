@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Product, Supplier, Order, OrderItem, CustomerInfo,  Category
-
+from django.db import transaction
+from django.core.exceptions import ValidationError
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,6 +34,17 @@ class OrderItemSerializer(serializers.ModelSerializer):
             'order': {'required': False},  # Make 'order' optional in the request
             'price': {'read_only': True}, # Make 'price' read-only if calculated
         }
+    
+    def validate(self, data):
+        """
+        Check if there is sufficient stock for each item.
+        """
+        product = data['product']
+        quantity = data['quantity']
+
+        if product.stock < quantity:
+            raise serializers.ValidationError(f"Insufficient stock for {product.name}. Available stock is {product.stock}, but {quantity} was requested.")
+        return data
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
@@ -47,26 +59,62 @@ class OrderSerializer(serializers.ModelSerializer):
             'total_amount': {'required': False},
             'total_amount': {'read_only': True}, # Make 'total_amount' read-only
         }
+
     
     def create(self, validated_data):
-        """example_relationship = validated_data.pop('example_relationship')
-            instance = ExampleModel.objects.create(**validated_data)
-            instance.example_relationship = example_relationship
-            return instance"""
-
         items_data = validated_data.pop('items')
-        order = Order.objects.create(**validated_data)
+
+        # Use a transaction to ensure atomicity
+        with transaction.atomic():
+            # Create the Order instance
+            order = Order.objects.create(**validated_data)
+
+            # Create each OrderItem
+            for item_data in items_data:
+                # This will call OrderItemSerializer.validate() for each item
+                product = item_data['product']
+                quantity = item_data['quantity']
+
+                if quantity <= 0:
+                    raise ValidationError("Quantity must be greater than zero.")
+                
+                # Reduce product stock
+                # product.stock -= quantity
+                # if product.stock == 0:
+                #     product.delete()  # Optionally delete if stock reaches 0
+                # else:
+                #     product.save()
+
+                if product.stock >= quantity:  # Ensure there is enough stock
+                    product.stock -= quantity  # Reduce stock by the order quantity
+                    product.save()
+                else:
+                    raise ValidationError(f"Insufficient stock for {product.name}. Available stock is {product.stock}, but {instance.quantity} was requested.")
+
+                # Create the OrderItem and associate with the Order
+                OrderItem.objects.create(order=order, **item_data)
+
+            return order
+    
+    # def create(self, validated_data):
+    #     """example_relationship = validated_data.pop('example_relationship')
+    #         instance = ExampleModel.objects.create(**validated_data)
+    #         instance.example_relationship = example_relationship
+    #         return instance"""
+
+    #     items_data = validated_data.pop('items')
+    #     order = Order.objects.create(**validated_data)
 
         
-        # Create each OrderItem and associate with the order
-        for item_data in items_data:
-            OrderItem.objects.create(order=order, **item_data)
+    #     # Create each OrderItem and associate with the order
+    #     for item_data in items_data:
+    #         OrderItem.objects.create(order=order, **item_data)
         
-        # Update total_amount after creating all order items
-        order.total_amount = order.get_total_price()
-        order.save()
+    #     # Update total_amount after creating all order items
+    #     order.total_amount = order.get_total_price()
+    #     order.save()
         
-        return order
+    #     return order
 
     # def update(self, instance, validated_data):
     #     # Update the `Order` instance

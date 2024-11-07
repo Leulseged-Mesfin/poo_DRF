@@ -487,8 +487,6 @@ class OrderListCreateAPIView(APIView):
             serializer = OrderSerializer(data=request.data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            # validated_data = serializer.validated_data
-            # serializer.create(validated_data)
 
             serializer.save() # calls the create method in OrderSerializer
             return Response(serializer.data, status=status.HTTP_201_CREATED)      
@@ -497,7 +495,8 @@ class OrderListCreateAPIView(APIView):
                 {"error": f"An error occurred while creating the Order.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-   
+
+
 
 class OrderRetrieveUpdateDeleteAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
