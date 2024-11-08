@@ -525,32 +525,6 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    # def put(self, request, pk):
-    #     try:
-    #         # user = request.user
-    #         # if not (user.role == 'Manager' or user.role == 'Salesman'):
-    #         #     return Response(
-    #         #         {"error": "You are not authorized to update the Order."},
-    #         #         status=status.HTTP_403_FORBIDDEN
-    #         #     )                
-    #         if not Order.objects.filter(id=pk).exists():
-    #             return Response(
-    #                 {"error": "Order Does not Exist."},
-    #                 status=status.HTTP_404_NOT_FOUND
-    #             )
-    #         order = Order.objects.get(id=pk)
-    #         serializer = OrderSerializer(data=request.data)
-    #         if not serializer.is_valid():
-    #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #         validated_data = serializer.validated_data
-    #         serializer.update(order, validated_data)
-    #         return Response(serializer.data, status=status.HTTP_200_OK)      
-    #     except KeyError as e:
-    #         return Response(
-    #             {"error": f"An error occurred while updating the Order.  {str(e)}"},
-    #             status=status.HTTP_500_INTERNAL_SERVER_ERROR
-    #         )
-
     def put(self, request, pk):
         try:
             # Check if the order exists

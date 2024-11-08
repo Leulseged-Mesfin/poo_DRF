@@ -78,12 +78,6 @@ class OrderSerializer(serializers.ModelSerializer):
                 if quantity <= 0:
                     raise ValidationError("Quantity must be greater than zero.")
                 
-                # Reduce product stock
-                # product.stock -= quantity
-                # if product.stock == 0:
-                #     product.delete()  # Optionally delete if stock reaches 0
-                # else:
-                #     product.save()
 
                 if product.stock >= quantity:  # Ensure there is enough stock
                     product.stock -= quantity  # Reduce stock by the order quantity
@@ -96,40 +90,6 @@ class OrderSerializer(serializers.ModelSerializer):
 
             return order
     
-    # def create(self, validated_data):
-    #     """example_relationship = validated_data.pop('example_relationship')
-    #         instance = ExampleModel.objects.create(**validated_data)
-    #         instance.example_relationship = example_relationship
-    #         return instance"""
-
-    #     items_data = validated_data.pop('items')
-    #     order = Order.objects.create(**validated_data)
-
-        
-    #     # Create each OrderItem and associate with the order
-    #     for item_data in items_data:
-    #         OrderItem.objects.create(order=order, **item_data)
-        
-    #     # Update total_amount after creating all order items
-    #     order.total_amount = order.get_total_price()
-    #     order.save()
-        
-    #     return order
-
-    # def update(self, instance, validated_data):
-    #     # Update the `Order` instance
-    #     items_data = validated_data.pop('items', None)
-    #     instance.customer = validated_data.get('customer', instance.customer)
-    #     instance.status = validated_data.get('status', instance.status)
-    #     instance.save()
-
-    #     if items_data is not None:
-    #         # Clear existing items and replace with the new ones
-    #         instance.items.all().delete()
-    #         for item_data in items_data:
-    #             OrderItem.objects.create(order=instance, **item_data)
-
-    #     return instance
 
     def update(self, instance, validated_data):
         # Update order fields directly
@@ -164,26 +124,3 @@ class OrderSerializer(serializers.ModelSerializer):
         
         # If items are not provided, do not alter the existing items
         return instance
-
-
-
-# Works For Both, ChatGPT gave
-# def update(self, instance, validated_data):
-#     # Extract items data if present
-#     items_data = validated_data.pop('items', None)
-
-#     # Update the Order instance fields only if provided in the validated_data
-#     instance.customer = validated_data.get('customer', instance.customer)
-#     instance.status = validated_data.get('status', instance.status)
-#     instance.save()
-
-#     # Check if the items field is provided in the request
-#     if items_data is not None:
-#         # Clear existing items and replace with new ones (PUT behavior)
-#         instance.items.all().delete()
-#         for item_data in items_data:
-#             OrderItem.objects.create(order=instance, **item_data)
-
-#     # If items_data is None (e.g., PATCH without items), retain existing items
-
-#     return instance
