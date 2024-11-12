@@ -9,6 +9,9 @@ from .views import (
     OrderListCreateAPIView,
     OrderRetrieveUpdateDeleteAPIView,
 
+    OrderItemListCreateAPIView,
+    OrderItemRetrieveUpdateDeleteAPIView,
+
     CustomerListCreateAPIView,
     CustomerRetrieveUpdateDeleteAPIView,
 
@@ -27,6 +30,9 @@ urlpatterns = [
 
     path('orders', OrderListCreateAPIView.as_view(), name='orders-list'),
     path('orders/<pk>', OrderRetrieveUpdateDeleteAPIView.as_view(), name='orders-retrieve'),
+
+    path('orderitems', OrderItemListCreateAPIView.as_view(), name='orders-items-list'),
+    path('orderitems/<pk>', OrderItemRetrieveUpdateDeleteAPIView.as_view(), name='orders-items-retrieve'),
 
     path('customers', CustomerListCreateAPIView.as_view(), name='customers-list'),
     path('customers/<pk>', CustomerRetrieveUpdateDeleteAPIView.as_view(), name='customers-retrieve'),

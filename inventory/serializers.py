@@ -29,7 +29,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ['order', 'product', 'quantity', 'price']
+        fields = ['id', 'order', 'product', 'quantity', 'price']
         extra_kwargs = {
             'order': {'required': False},  # Make 'order' optional in the request
             'price': {'read_only': True}, # Make 'price' read-only if calculated
@@ -45,6 +45,37 @@ class OrderItemSerializer(serializers.ModelSerializer):
         if product.stock < quantity:
             raise serializers.ValidationError(f"Insufficient stock for {product.name}. Available stock is {product.stock}, but {quantity} was requested.")
         return data
+    
+
+    def update(self, instance, validated_data):
+        # Update order fields directly
+        instance.product = validated_data.get('product', instance.product)
+        instance.quantity = validated_data.get('status', instance.quantity)
+        instance.save()
+
+        # # Update nested items
+        # items_data = validated_data.pop('items', [])
+        # instance.items.all().delete()  # Clear existing items
+        
+        
+        # OrderItem.objects.create(order=instance, **item_data)
+        product = instance.product
+        quantity = instance.quantity
+
+        if quantity <= 0:
+            raise ValidationError("Quantity must be greater than zero.")
+        
+        if product.stock >= quantity:  # Ensure there is enough stock
+            product.stock -= quantity  # Reduce stock by the order quantity
+            product.save()
+        else:
+            raise ValidationError(f"Insufficient stock for {product.name}. Available stock is {product.stock}, but {instance.quantity} was requested.")
+
+
+        return instance
+        
+
+
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
