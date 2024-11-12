@@ -712,7 +712,7 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             validated_data = serializer.validated_data
             serializer.update(order_item, validated_data)
-            # serializer.save()
+            # serializer.save()-
             return Response(serializer.data, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
