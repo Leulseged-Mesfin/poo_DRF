@@ -50,7 +50,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         # Update order fields directly
         instance.product = validated_data.get('product', instance.product)
-        instance.quantity = validated_data.get('status', instance.quantity)
+        instance.quantity = validated_data.get('quantity', instance.quantity)
         instance.save()
 
         # # Update nested items
