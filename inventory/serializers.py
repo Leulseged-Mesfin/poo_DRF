@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Supplier, Order, OrderItem, CustomerInfo,  Category
+from .models import Product, Supplier, Order, OrderItem, CustomerInfo,  Category, Type
 from django.db import transaction
 from django.core.exceptions import ValidationError
 
@@ -12,6 +12,13 @@ class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
         fields = '__all__'
+
+class TypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Type
+        fields = '__all__'
+
+
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:

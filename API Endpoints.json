@@ -1,0 +1,57 @@
+{
+    "user endpoint http://localhost:8000/auth/user/register":
+    {
+        "name": "Leulseged Mesfin",
+        "email": "leulsegedmesfin@gmail.com",
+        "password": "Leul1992",
+        "re_password": "Leul1992",
+        "role": "Manager"
+    },
+
+    "product endpoint http://127.0.0.1:8000/api/inventory/products":
+    {
+        "name": "kokoro",
+        "description": "hummering...",
+        "price": 500,
+        "stock": 200,
+        "category": 2,
+        "supplier": 14
+    },
+
+    "category endpoint http://127.0.0.1:8000/api/inventory/categories":
+    {
+        "id": 2,
+        "name": "Electronics"
+    },
+    
+    "supplier endpoint http://127.0.0.1:8000/api/inventory/suppliers":
+    {
+        "name": "Technologies",
+        "contact_info": "+251932984399"
+    },
+
+    "order endpoint http://127.0.0.1:8000/api/inventory/orders":
+    {
+        "customer": 3,
+        "status": "Pending",
+        "items": [
+            {
+              "product": 22,
+              "quantity": 10
+            },
+            {
+              "product": 17,
+              "quantity": 2
+            }
+        ]
+    },
+    
+    "customer endpoint http://127.0.0.1:8000/api/inventory/customers":
+    {
+        "name": "Firew",
+        "phone": "092847984",
+        "address": "sodo"
+    }
+
+
+}

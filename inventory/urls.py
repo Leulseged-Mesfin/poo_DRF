@@ -18,6 +18,8 @@ from .views import (
     CategoryListCreateAPIView,
     CategoryRetrieveUpdateDeleteAPIView,
 
+    TypeListCreateAPIView,
+    TypeRetrieveUpdateDeleteAPIView,
   
 )
 
@@ -39,4 +41,7 @@ urlpatterns = [
 
     path('category', CategoryListCreateAPIView.as_view(), name='category-list'),
     path('category/<pk>', CategoryRetrieveUpdateDeleteAPIView.as_view(), name='category-retrieve'),
+
+    path('types', TypeListCreateAPIView.as_view(), name='type-list'),
+    path('types/<pk>', TypeRetrieveUpdateDeleteAPIView.as_view(), name='type-retrieve'),
 ]

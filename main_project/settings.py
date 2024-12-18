@@ -13,6 +13,12 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
+import django_heroku
+from dotenv import load_dotenv
+import dj_database_url
+
+ # Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,14 +28,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8kb*kqp24t6c*%@p-0ax5(s4aq9@58r*)ux@-3htn7a&8pg6-!'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.8.169', '192.168.189.180', '192.168.137.133', '192.168.144.180']
-
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS",).split(" ")
+# ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.8.169', '192.168.189.180', '192.168.137.133', '192.168.144.180', '192.168.137.216']
 
 # Application definition
 
@@ -49,6 +54,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -94,16 +100,31 @@ WSGI_APPLICATION = 'main_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME':'semu',
+        'USER':'root',
+        'PASSWORD':'Leul1992',
+        'HOST':'localhost',
+        'PORT':'3306',
+    },
+    'semu': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME':'semu',
+        'USER':'root',
+        'PASSWORD':'Leul1992',
+        'HOST':'localhost',
+        'PORT':'3306',
     }
 }
+database_url = os.getenv('DATABASE_URL')
+DATABASES['default'] = dj_database_url.parse(database_url)
 
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
+
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
@@ -136,8 +157,14 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+# Older
+# MEDIA_URL = 'media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+# Fixed Version
+MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 REST_FRAMEWORK = {
@@ -164,3 +191,5 @@ SIMPLE_JWT = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'user.UserAccount'
+
+django_heroku.settings(locals())
