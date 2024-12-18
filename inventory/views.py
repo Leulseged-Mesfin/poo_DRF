@@ -1,14 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import Product, Supplier, Order, OrderItem, Category, CustomerInfo
+from .models import Product, Supplier, Order, OrderItem, Category, CustomerInfo, Type
 from .serializers import (
     ProductSerializer, 
     SupplierSerializer, 
     OrderSerializer, 
     OrderItemSerializer, 
     CategorySerializer, 
-    CustomerInfoSerializer
+    CustomerInfoSerializer,
+    TypeSerializer
 )
 import logging
 
@@ -28,6 +29,7 @@ class ProductListCreateAPIView(APIView):
             #         status=status.HTTP_403_FORBIDDEN
             #     )
             product = Product.objects.all()
+            # products = Product.objects.all().order_by('id')
             serializer = ProductSerializer(product, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
             
@@ -38,6 +40,7 @@ class ProductListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+ 
     def post(self, request, format=None):
         try:
             # user = request.user
@@ -45,15 +48,33 @@ class ProductListCreateAPIView(APIView):
             #     return Response(
             #         {"error": "You are not authorized to retrive the Product."},
             #         status=status.HTTP_403_FORBIDDEN
-            #     )     
-            serializer = ProductSerializer(data=request.data)
-            if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            #      )   
+            data = request.data
+            product_type = data.get('product_type')
+            product_category_id = data.get('name')
+            product_category_id = int(product_category_id)
 
-            validated_data = serializer.validated_data
-            serializer.create(validated_data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)                
-                 
+            types = Type.objects.all()
+
+            for item in types:  
+                type_category_id = item.name_id
+                if type_category_id == product_category_id:
+                    
+                    if product_type not in item.types:
+                        return Response({"error": "Product type does not exist in this list."}, status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        serializer = ProductSerializer(data=request.data)
+                        if not serializer.is_valid():
+                            print(serializer.errors)
+                            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+                        validated_data = serializer.validated_data
+                        serializer.create(validated_data)
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+            # This will only execute if no matching category is found
+            return Response({"error": "Invalid product category."}, status=status.HTTP_400_BAD_REQUEST)
+
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while Retriving the Product.  {str(e)}"},
@@ -442,7 +463,7 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             CustomerInfo.objects.get(id=pk).delete()
-            if not CustomerInfo.objects.filter(user=user).exists():
+            if not CustomerInfo.objects.filter(id=pk).exists():
                 return Response(
                     status=status.HTTP_204_NO_CONTENT
                 )
@@ -761,11 +782,6 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
 
 
 
-
-
-
-
-
 class CategoryListCreateAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
     def get(self, request, format=None):
@@ -776,7 +792,8 @@ class CategoryListCreateAPIView(APIView):
             #         {"error": "You are not authorized to retrive the Category."},
             #         status=status.HTTP_403_FORBIDDEN
             #     )
-            category = Category.objects.all()
+            # category = Category.objects.all()
+            category = Category.objects.all().order_by('id')
             serializer = CategorySerializer(category, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)              
                       
@@ -898,7 +915,7 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             Category.objects.get(id=pk).delete()
-            if not Category.objects.filter(user=user).exists():
+            if not Category.objects.filter(id=pk).exists():
                 return Response(
                     status=status.HTTP_204_NO_CONTENT
                 )
@@ -912,3 +929,154 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An error occurred while Retriving the Supplier.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+
+class TypeListCreateAPIView(APIView):
+    permission_classes = (permissions.AllowAny,)
+    def get(self, request, format=None):
+        try:
+            # user = request.user
+            # if not (user.role == 'Manager' or user.role == 'Salesman'):
+            #     return Response(
+            #         {"error": "You are not authorized to retrive the Category."},
+            #         status=status.HTTP_403_FORBIDDEN
+            #     )
+            # types = Type.objects.all()
+            types = Type.objects.all().order_by('id')
+            serializer = TypeSerializer(types, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)              
+                      
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while Retriving the Types.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def post(self, request, format=None):
+        try:
+            # user = request.user
+            # if not (user.role == 'Manager' or user.role == 'Salesman'):
+            #     return Response(
+            #         {"error": "You are not authorized to create the Category."},
+            #         status=status.HTTP_403_FORBIDDEN
+            #     )
+
+            serializer = TypeSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            validated_data = serializer.validated_data
+            serializer.create(validated_data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+                      
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while creating the Type.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        
+class TypeRetrieveUpdateDeleteAPIView(APIView):
+    permission_classes = (permissions.AllowAny,)
+    def get(self, request, pk):
+        try:
+            # user = request.user
+            # if not (user.role == 'Manager' or user.role == 'Salesman'):
+            #     return Response(
+            #         {"error": "You are not authorized to retrive the Category."},
+            #         status=status.HTTP_403_FORBIDDEN
+            #     )
+            if not Type.objects.filter(id=pk).exists():
+                return Response(
+                    {"error": "Type Does not Exist."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            types = Type.objects.get(id=pk)
+            serializer = TypeSerializer(types)
+            return Response(serializer.data, status=status.HTTP_200_OK)     
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while Retriving the Type.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def put(self, request, pk):
+        try:
+            # user = request.user
+            # if not (user.role == 'Manager' or user.role == 'Salesman'):
+            #     return Response(
+            #         {"error": "You are not authorized to update the Category."},
+            #         status=status.HTTP_403_FORBIDDEN
+            #     )                
+            if not Type.objects.filter(id=pk).exists():
+                return Response(
+                    {"error": "Type Does not Exist."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            types = Type.objects.get(id=pk)
+            serializer = TypeSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            validated_data = serializer.validated_data
+            serializer.update(types, validated_data)
+            return Response(serializer.data, status=status.HTTP_200_OK)      
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while updating the Type.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+    def patch(self, request, pk):
+        try:
+            # user = request.user
+            # if not (user.role == 'Manager' or user.role == 'Salesman'):
+            #     return Response(
+            #         {"error": "You are not authorized to update the Category."},
+            #         status=status.HTTP_403_FORBIDDEN
+            #     )                
+            if not Type.objects.filter(id=pk).exists():
+                return Response(
+                    {"error": "Type Does not Exist."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            types = Type.objects.get(id=pk)    
+            serializer = TypeSerializer(types, data=request.data, partial=True)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)      
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while updating the Type.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request, pk):
+        try:
+            # user = request.user
+            # if not (user.role == 'Manager' or user.role == 'Salesman'):
+            #     return Response(
+            #         {"error": "You are not authorized to delete the Category."},
+            #         status=status.HTTP_403_FORBIDDEN
+            #     )                
+            if not Type.objects.filter(id=pk).exists():
+                return Response(
+                    {"error": "Type Does not Exist."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            Type.objects.get(id=pk).delete()
+            if not Type.objects.filter(id=pk).exists():
+                return Response(
+                    status=status.HTTP_204_NO_CONTENT
+                )
+            else:
+                return Response(
+                    {"error": "Failed to delete an Type."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )      
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while Retriving the Type.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+

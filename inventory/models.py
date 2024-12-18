@@ -8,29 +8,39 @@ from django.core.exceptions import ValidationError
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, default='Wood', blank=False, null=False)
+    name = models.CharField(max_length=100, default='', unique=True)
 
     def __str__(self):
         return self.name
 
 class Supplier(models.Model):
     name = models.CharField(max_length=200, blank=True, null=False)
-    contact_info = models.CharField(max_length=50)
+    contact_info = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
         return self.name
 
+class Type(models.Model):
+    name = models.ForeignKey(Category, on_delete=models.CASCADE)
+    types = models.JSONField(default=list)
+
+    # def __str__(self):
+    #     return f"Type for Category: {self.name.name}"
+
+
 class Product(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.ForeignKey(Category, on_delete=models.CASCADE)
+    product_type = models.CharField(max_length=200, blank=False, null=False)
     description = models.TextField(null=True, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.PositiveIntegerField(null=True, blank=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    buying_price = models.DecimalField(max_digits=10, decimal_places=2)
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.PositiveIntegerField()
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='products/')
 
     class Meta:
         constraints = [
-            UniqueConstraint(fields=['name', 'category'], name='unique_product_category')
+            UniqueConstraint(fields=['name', 'product_type'], name='unique_product_category')
         ]
 
     def __str__(self):
@@ -38,9 +48,9 @@ class Product(models.Model):
 
 
 class CustomerInfo(models.Model):
-    name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=255, default="")
-    address = models.TextField()
+    name = models.CharField(max_length=255, default="Customer", null=True, blank=True)
+    phone = models.CharField(max_length=255, null=True, blank=True, default="")
+    address = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -57,7 +67,7 @@ class Order(models.Model):
 
     def get_total_price(self):
         """Calculate the total price of the entire order."""
-        return sum(item.quantity * item.product.price for item in self.items.all())
+        return sum(item.quantity * item.product.selling_price for item in self.items.all())
 
 
 class OrderItem(models.Model):
@@ -71,7 +81,7 @@ class OrderItem(models.Model):
     
     def get_price(self):
         """Calculate the total price of this item."""
-        return self.product.price * self.quantity
+        return self.product.selling_price * self.quantity
 
 
 @receiver(pre_save, sender=OrderItem)
@@ -90,6 +100,6 @@ def update_order_total(sender, instance, **kwargs):
 @receiver([post_save, post_delete], sender=OrderItem)
 def update_order_total(sender, instance, **kwargs):
     order = instance.order
-    total = sum(item.quantity * item.product.price for item in order.items.all())
+    total = sum(item.quantity * item.product.selling_price for item in order.items.all())
     order.total_amount = total
     order.save()
