@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import Product, Supplier, Order, OrderItem, CustomerInfo,  Category, Type
+from .models import Product, Supplier, Order, OrderItem, CustomerInfo,  Category
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from django.db.models import UniqueConstraint
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,17 +14,26 @@ class SupplierSerializer(serializers.ModelSerializer):
         model = Supplier
         fields = '__all__'
 
-class TypeSerializer(serializers.ModelSerializer):
+class ProductGetSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    supplier_name = serializers.CharField(source='supplier.name', read_only=True)
+
     class Meta:
-        model = Type
-        fields = '__all__'
+        model = Product
+        # fields = '__all__'
+        fields = ['id', 'name', 'category_name', 'description', 'buying_price', 'selling_price', 'stock', 'supplier_name', 'image']
+        constraints = [
+            UniqueConstraint(fields=['name', 'category_name'], name='unique_product_category')
+        ]
 
+class ProductPostSerializer(serializers.ModelSerializer):
 
-
-class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+        constraints = [
+            UniqueConstraint(fields=['name', 'category'], name='unique_product_category')
+        ]
 
 class CustomerInfoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,6 +43,7 @@ class CustomerInfoSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)  # Read-only
+    # product_name = serializers.CharField(source='product.name', read_only=True)
 
     class Meta:
         model = OrderItem
@@ -80,7 +91,24 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
         return instance
-        
+
+
+
+class OrderGetSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True)
+    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    customer = serializers.CharField(source='customer.name', read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['customer', 'status', 'order_date', 'total_amount', 'items']
+        # fields = ['customer', 'status', 'items']
+        extra_kwargs = {
+            # 'items': {'read_only': True}, # Make 'items' read-only
+            'total_amount': {'required': False},
+            'total_amount': {'read_only': True}, # Make 'total_amount' read-only
+        }
+
 
 
 
@@ -97,7 +125,6 @@ class OrderSerializer(serializers.ModelSerializer):
             'total_amount': {'required': False},
             'total_amount': {'read_only': True}, # Make 'total_amount' read-only
         }
-
     
     def create(self, validated_data):
         items_data = validated_data.pop('items')

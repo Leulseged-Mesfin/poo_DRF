@@ -20,17 +20,9 @@ class Supplier(models.Model):
     def __str__(self):
         return self.name
 
-class Type(models.Model):
-    name = models.ForeignKey(Category, on_delete=models.CASCADE)
-    types = models.JSONField(default=list)
-
-    # def __str__(self):
-    #     return f"Type for Category: {self.name.name}"
-
-
 class Product(models.Model):
-    name = models.ForeignKey(Category, on_delete=models.CASCADE)
-    product_type = models.CharField(max_length=200, blank=False, null=False)
+    name = models.CharField(max_length=200, blank=False, null=False)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=False, blank=False)
     description = models.TextField(null=True, blank=True)
     buying_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -40,7 +32,7 @@ class Product(models.Model):
 
     class Meta:
         constraints = [
-            UniqueConstraint(fields=['name', 'product_type'], name='unique_product_category')
+            UniqueConstraint(fields=['name', 'category'], name='unique_product_category')
         ]
 
     def __str__(self):
@@ -64,6 +56,10 @@ class Order(models.Model):
 
     def str(self):
         return self.customer
+    
+    # @property
+    def is_empty(self):
+        return not self.items.exists() 
 
     def get_total_price(self):
         """Calculate the total price of the entire order."""
@@ -103,3 +99,10 @@ def update_order_total(sender, instance, **kwargs):
     total = sum(item.quantity * item.product.selling_price for item in order.items.all())
     order.total_amount = total
     order.save()
+
+@receiver(post_delete, sender=OrderItem)
+def delete_order_if_no_items(sender, instance, **kwargs):
+    # Check if the associated order has any items left
+    order = instance.order
+    if not order.items.exists():  # Check if the related items queryset is empty
+        order.delete()

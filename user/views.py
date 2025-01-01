@@ -7,17 +7,45 @@ from rest_framework import permissions, status
 from django.contrib.auth.hashers import check_password
 
 
-class RegisterView(APIView):
-    permission_classes = (permissions.AllowAny,)
-    # permission_classes = [IsAuthenticated]
+class UserListCreateAPIView(APIView):
+    # permission_classes = (permissions.AllowAny,)
+    # permission_classes = [IsAuthenticated]    
+    def get(self, request, format=None):
+        try:
+            user = request.user
+            if not (user.role == 'Manager' or user.is_superuser == True):
+                return Response(
+                    {"error": "You are not authorized to retrive the User."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            # user = request.user
+
+            # Check if the user is a manager
+            if user.groups.filter(name='Manager').exists():
+                # Exclude superusers for managers
+                users = User.objects.filter(is_superuser=False)
+            else:
+                # Retrieve all users for non-managers and non-salesman
+                users = User.objects.all()
+            # user = User.objects.all()
+            serializer = UserSerializer(users, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+                
+        except:
+            return Response(
+                {"error": "An error occurred while retriving User Detail."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                
+            )
+            
     def post(self, request):
         try:
             user = request.user
-            # if not (user.role == 'Manager' or user.is_superuser):
-            #     return Response(
-            #         {"error": "You are not authorized to create the User."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )
+            if not (user.role == 'Manager' or user.is_superuser):
+                return Response(
+                    {"error": "You are not authorized to create the User."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
             data = request.data
             name = data.get('name')
@@ -58,11 +86,105 @@ class RegisterView(APIView):
             return Response({"error": f"An error occurred: {str(e)}"})
 
 
-class RetriveUserView(APIView):
-    permission_classes = (permissions.AllowAny,)
+class UserRetrieveUpdateDeleteAPIView(APIView):
+    # permission_classes = (permissions.AllowAny,)
+    def get(self, request, pk):
+        try:
+            user = request.user
+            if not (user.role == 'Manager' or user.is_superuser == True):
+                return Response(
+                    {"error": "You are not authorized to retrive the User."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            if not User.objects.filter(id=pk).exists():
+                return Response(
+                    {"error": "User Does not Exist."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            user = User.objects.get(id=pk)
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)      
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while Retriving the User.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def patch(self, request, pk):
+        try:
+            user = request.user
+            if not (user.role == 'Manager' or user.is_superuser == True):
+                return Response(
+                    {"error": "You are not authorized to update the User."},
+                    status=status.HTTP_403_FORBIDDEN
+                ) 
+
+            # users = User.objects.filter(id=pk).exists()
+            users = User.objects.filter(id=pk).first() 
+            if not users:
+                return Response(
+                    {"error": "User Does not Exist."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            serializer = UserSerializer(users, data=request.data, partial=True)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+     
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while updating the User.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request, pk):
+        try:
+            user = request.user
+            if not (user.role == 'Manager' or user.is_superuser == True):
+                return Response(
+                    {"error": "You are not authorized to delete the User."},
+                    status=status.HTTP_403_FORBIDDEN
+                )              
+            print(user.role)
+            if not User.objects.filter(id=pk).exists():
+                return Response(
+                    {"error": "User Does not Exist."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            User.objects.get(id=pk).delete()
+            if not User.objects.filter(id=pk).exists():
+                return Response(
+                    status=status.HTTP_204_NO_CONTENT
+                )
+            else:
+                return Response(
+                    {"error": "Failed to delete an User."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+    
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while deleting the User.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+
+
+
+class UserProfileView(APIView):
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, format=None):
         try:
             user = request.user
+            if not (user.role == 'Manager' or user.is_superuser == True):
+                return Response(
+                    {"error": "You are not authorized to retrive the User."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            # user = request.user
             user = UserSerializer(user)
             
             return Response(
@@ -76,31 +198,6 @@ class RetriveUserView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR               
             )
     
-
-class ListUserView(APIView):
-    permission_classes = (permissions.AllowAny,)
-    def get(self, request, format=None):
-        try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.is_superuser == True):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the User."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )
-            user = User.objects.all()
-            serializer = UserSerializer(user, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-                
-        except:
-            return Response(
-                {"error": "An error occurred while retriving User Detail."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                
-            )
-        
-
-class UpdateUserOwnView(APIView):
-    permission_classes = (permissions.AllowAny,)
     def patch(self, request, format=None):
         try:
             user = request.user
@@ -117,7 +214,8 @@ class UpdateUserOwnView(APIView):
             )
 
 
-class ChangePassword(APIView):
+
+class UserChangePassword(APIView):
     def post(self, request, format=None):
         try:
             user = request.user  # This gives the actual User model instance
@@ -176,72 +274,6 @@ class ChangePassword(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR               
             )
         
-
-
-
-class UpdateUserView(APIView):
-    # permission_classes = (permissions.AllowAny,)
-    def patch(self, request, pk):
-        try:
-            user = request.user
-            if not (user.role == 'Manager' or user.is_superuser == True):
-                return Response(
-                    {"error": "You are not authorized to update the User."},
-                    status=status.HTTP_403_FORBIDDEN
-                ) 
-
-            # users = User.objects.filter(id=pk).exists()
-            users = User.objects.filter(id=pk).first() 
-            if not users:
-                return Response(
-                    {"error": "User Does not Exist."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-            serializer = UserSerializer(users, data=request.data, partial=True)
-            if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-     
-        except KeyError as e:
-            return Response(
-                {"error": f"An error occurred while updating the User.  {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-class DeleteUserView(APIView):
-    permission_classes = (permissions.AllowAny,)
-    def delete(self, request, pk):
-        try:
-            user = request.user
-            # if (user.role == 'Manager' or user.is_superuser):
-            #     return Response(
-            #         {"error": "You are not authorized to delete the User."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )              
-            if not User.objects.filter(id=pk).exists():
-                return Response(
-                    {"error": "User Does not Exist."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            User.objects.get(id=pk).delete()
-            if not User.objects.filter(id=pk).exists():
-                return Response(
-                    status=status.HTTP_204_NO_CONTENT
-                )
-            else:
-                return Response(
-                    {"error": "Failed to delete an User."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-    
-        except KeyError as e:
-            return Response(
-                {"error": f"An error occurred while deleting the User.  {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
         
 
 # create a model called user and fields are email, name, password and role ,

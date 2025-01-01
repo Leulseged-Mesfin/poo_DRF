@@ -203,19 +203,19 @@ class DeleteUserView(APIView):
 #  role is choice and define the choice inside the user model not on its 
 #  own and also create registration view and use APIView.
 
-try:
-            user = request.user
-            if (user.role == 'Manager' or user.role == 'Salesman'): 
-                product = Product.objects.all()
-                serializer = ProductSerializer(product, many=True)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response(
-                    {"error": "You are not authorized to retrive the Product."},
-                    status=status.HTTP_403_FORBIDDEN
-                )      
-        except KeyError as e:
-            return Response(
-                {"error": f"An error occurred while Retriving the Product.  {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+# try:
+#             user = request.user
+#             if (user.role == 'Manager' or user.role == 'Salesman'): 
+#                 product = Product.objects.all()
+#                 serializer = ProductSerializer(product, many=True)
+#                 return Response(serializer.data, status=status.HTTP_200_OK)
+#             else:
+#                 return Response(
+#                     {"error": "You are not authorized to retrive the Product."},
+#                     status=status.HTTP_403_FORBIDDEN
+#                 )      
+#         except KeyError as e:
+#             return Response(
+#                 {"error": f"An error occurred while Retriving the Product.  {str(e)}"},
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
