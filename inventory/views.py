@@ -1,15 +1,16 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import Product, Supplier, Order, OrderItem, Category, CustomerInfo, Type
+from .models import Product, Supplier, Order, OrderItem, Category, CustomerInfo
 from .serializers import (
-    ProductSerializer, 
+    ProductPostSerializer, 
+    ProductGetSerializer, 
     SupplierSerializer, 
+    OrderGetSerializer, 
     OrderSerializer, 
     OrderItemSerializer, 
     CategorySerializer, 
-    CustomerInfoSerializer,
-    TypeSerializer
+    CustomerInfoSerializer
 )
 import logging
 
@@ -19,18 +20,18 @@ from django.core.exceptions import ValidationError
 
 
 class ProductListCreateAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, format=None):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Product."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrive the Product."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             product = Product.objects.all()
             # products = Product.objects.all().order_by('id')
-            serializer = ProductSerializer(product, many=True)
+            serializer = ProductGetSerializer(product, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
             
                       
@@ -43,62 +44,45 @@ class ProductListCreateAPIView(APIView):
  
     def post(self, request, format=None):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Product."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #      )   
-            data = request.data
-            product_type = data.get('product_type')
-            product_category_id = data.get('name')
-            product_category_id = int(product_category_id)
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to create the Product."},
+                    status=status.HTTP_403_FORBIDDEN
+                 )   
+            serializer = ProductPostSerializer(data=request.data)
+            if not serializer.is_valid():
+                print(serializer.errors)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            types = Type.objects.all()
-
-            for item in types:  
-                type_category_id = item.name_id
-                if type_category_id == product_category_id:
-                    
-                    if product_type not in item.types:
-                        return Response({"error": "Product type does not exist in this list."}, status=status.HTTP_400_BAD_REQUEST)
-                    else:
-                        serializer = ProductSerializer(data=request.data)
-                        if not serializer.is_valid():
-                            print(serializer.errors)
-                            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-                        validated_data = serializer.validated_data
-                        serializer.create(validated_data)
-                        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-            # This will only execute if no matching category is found
-            return Response({"error": "Invalid product category."}, status=status.HTTP_400_BAD_REQUEST)
+            validated_data = serializer.validated_data
+            serializer.create(validated_data)
+            return Response({"message": f"Product Created successfully."}, status=status.HTTP_201_CREATED)
 
         except KeyError as e:
+            print(e)
             return Response(
-                {"error": f"An error occurred while Retriving the Product.  {str(e)}"},
+                {"error": f"An error occurred while Creating the Product.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
-
 class ProductRetrieveUpdateDeleteAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Product."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )               
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrive the Product."},
+                    status=status.HTTP_403_FORBIDDEN
+                )               
             if not Product.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Product Does not Exist."},
                     status=status.HTTP_404_NOT_FOUND
                 )
             product = Product.objects.get(id=pk)
-            serializer = ProductSerializer(product)
+            serializer = ProductGetSerializer(product)
             return Response(serializer.data, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
@@ -108,24 +92,24 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
 
     def put(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Product."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     ) 
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Product."},
+                    status=status.HTTP_403_FORBIDDEN
+                ) 
             if not Product.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Product Does not Exist."},
                     status=status.HTTP_404_NOT_FOUND
                 )
             product = Product.objects.get(id=pk)
-            serializer = ProductSerializer(data=request.data)
+            serializer = ProductPostSerializer(data=request.data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             validated_data = serializer.validated_data
             serializer.update(product, validated_data)
-            return Response(serializer.data, status=status.HTTP_200_OK)        
+            return Response({"message": f"Product Updated successfully."}, status=status.HTTP_200_OK)        
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while updating the Product.  {str(e)}"},
@@ -134,23 +118,23 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
 
     def patch(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Product."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )          
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Product."},
+                    status=status.HTTP_403_FORBIDDEN
+                )          
             if not Product.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Product Does not Exist."},
                     status=status.HTTP_404_NOT_FOUND
                 )
             product = Product.objects.get(id=pk)    
-            serializer = ProductSerializer(product, data=request.data, partial=True)
+            serializer = ProductPostSerializer(product, data=request.data, partial=True)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)      
+            return Response({"message": f"Product Updated successfully."}, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while updating the Product.  {str(e)}"},
@@ -160,11 +144,11 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
     def delete(self, request, pk):
         try:
             user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to delete the Product."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to delete the Product."},
+                    status=status.HTTP_403_FORBIDDEN
+                )                
             if not Product.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Product Does not Exist."},
@@ -172,7 +156,7 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
                 )
             Product.objects.get(id=pk).delete()
             if not Product.objects.filter(id=pk).exists():
-                return Response(
+                return Response({"message": f"Product Deleted successfully."},
                     status=status.HTTP_204_NO_CONTENT
                 )
             else:
@@ -182,20 +166,20 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
                 )      
         except KeyError as e:
             return Response(
-                {"error": f"An error occurred while Retriving the Supplier.  {str(e)}"},
+                {"error": f"An error occurred while Deleting the Product.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 class SupplierListCreateAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, format=None):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Supplier."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrive the Supplier."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             supplier = Supplier.objects.all()
             serializer = SupplierSerializer(supplier, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)                            
@@ -207,12 +191,12 @@ class SupplierListCreateAPIView(APIView):
 
     def post(self, request, format=None):
         try:
-            # user = request.user
-            # if (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to create the Supplier."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     ) 
+            user = request.user
+            if (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to create the Supplier."},
+                    status=status.HTTP_403_FORBIDDEN
+                ) 
             serializer = SupplierSerializer(data=request.data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -226,18 +210,17 @@ class SupplierListCreateAPIView(APIView):
                 {"error": f"An error occurred while creating the Supplier.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
         
 class SupplierRetrieveUpdateDeleteAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Supplier."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )            
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrive the Supplier."},
+                    status=status.HTTP_403_FORBIDDEN
+                )            
             if not Supplier.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Supplier Does not Exist."},
@@ -254,12 +237,12 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
 
     def put(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Supplier."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )              
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Supplier."},
+                    status=status.HTTP_403_FORBIDDEN
+                )              
             if not Supplier.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Supplier Does not Exist."},
@@ -271,7 +254,7 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             validated_data = serializer.validated_data
             serializer.update(supplier, validated_data)
-            return Response(serializer.data, status=status.HTTP_200_OK)      
+            return Response({"message": f"Supplier Updated successfully."}, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while updating the Supplier.  {str(e)}"},
@@ -280,12 +263,12 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
 
     def patch(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Supplier."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )  
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Supplier."},
+                    status=status.HTTP_403_FORBIDDEN
+                )  
             if not Supplier.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Supplier Does not Exist."},
@@ -296,7 +279,7 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)                    
+            return Response({"message": f"Supplier Updated successfully."}, status=status.HTTP_200_OK)                    
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while updating the Supplier.  {str(e)}"},
@@ -305,12 +288,12 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
 
     def delete(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Supplier."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )  
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to delete the Supplier."},
+                    status=status.HTTP_403_FORBIDDEN
+                )  
             if not Supplier.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Supplier Does not Exist."},
@@ -318,7 +301,7 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                 )
             Supplier.objects.get(id=pk).delete()
             if not Supplier.objects.filter(id=pk).exists():
-                return Response(
+                return Response({"message": f"Supplier Deleted successfully."},
                     status=status.HTTP_204_NO_CONTENT
                 )
             else:
@@ -329,61 +312,59 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                     
         except KeyError as e:
             return Response(
-                {"error": f"An error occurred while Retriving the Supplier.  {str(e)}"},
+                {"error": f"An error occurred while Deleting the Supplier.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
 class CustomerListCreateAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, format=None):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Customers."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     ) 
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrive the Customers."},
+                    status=status.HTTP_403_FORBIDDEN
+                ) 
             customer = CustomerInfo.objects.all()
             serializer = CustomerInfoSerializer(customer, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
-                {"error": f"An error occurred while Retriving the Supplier.  {str(e)}"},
+                {"error": f"An error occurred while Retriving the Customers.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     def post(self, request, format=None):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to create the Customer."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )               
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to create the Customer."},
+                    status=status.HTTP_403_FORBIDDEN
+                )               
             serializer = CustomerInfoSerializer(data=request.data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             validated_data = serializer.validated_data
             serializer.create(validated_data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)     
+            return Response({"message": f"Customer Created successfully."}, status=status.HTTP_201_CREATED)     
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while creating the Customer.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
-
 class CustomerRetrieveUpdateDeleteAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Customer."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrive the Customer."},
+                    status=status.HTTP_403_FORBIDDEN
+                )                
             if not CustomerInfo.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Customer Does not Exist."},
@@ -400,12 +381,12 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
 
     def put(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Customer."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Customer."},
+                    status=status.HTTP_403_FORBIDDEN
+                )                
             if not CustomerInfo.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Customer Does not Exist."},
@@ -417,7 +398,7 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             validated_data = serializer.validated_data
             serializer.update(customer, validated_data)
-            return Response(serializer.data, status=status.HTTP_200_OK)      
+            return Response({"message": f"Customer Updated successfully."}, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while updating the Customer.  {str(e)}"},
@@ -426,12 +407,12 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
         
     def patch(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Customer."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Customer."},
+                    status=status.HTTP_403_FORBIDDEN
+                )                
             if not CustomerInfo.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Customer Does not Exist."},
@@ -442,7 +423,7 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)      
+            return Response({"message": f"Category Updated successfully."}, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while updating the Customer.  {str(e)}"},
@@ -451,12 +432,12 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
 
     def delete(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to delete the Customer."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )               
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to delete the Customer."},
+                    status=status.HTTP_403_FORBIDDEN
+                )               
             if not CustomerInfo.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Product Does not Exist."},
@@ -464,7 +445,7 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 )
             CustomerInfo.objects.get(id=pk).delete()
             if not CustomerInfo.objects.filter(id=pk).exists():
-                return Response(
+                return Response({"message": f"Customer Deleted successfully."},
                     status=status.HTTP_204_NO_CONTENT
                 )
             else:
@@ -474,23 +455,22 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 )      
         except KeyError as e:
             return Response(
-                {"error": f"An error occurred while Retriving the Supplier.  {str(e)}"},
+                {"error": f"An error occurred while Deleting the Supplier.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
 class OrderListCreateAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, format=None):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrieve the Order."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )               
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrieve the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                )               
             order = Order.objects.all()
-            serializer = OrderSerializer(order, many=True)
+            serializer = OrderGetSerializer(order, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)     
         except KeyError as e:
             return Response(
@@ -500,36 +480,36 @@ class OrderListCreateAPIView(APIView):
 
     def post(self, request, format=None):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to create the Order."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     ) 
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to create the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                ) 
             serializer = OrderSerializer(data=request.data)
             if not serializer.is_valid():
+                print(serializer.errors)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             serializer.save() # calls the create method in OrderSerializer
-            return Response(serializer.data, status=status.HTTP_201_CREATED)      
+            return Response({"message": f"Order Created successfully."}, status=status.HTTP_201_CREATED)      
         except KeyError as e:
+            print(e)
             return Response(
                 {"error": f"An error occurred while creating the Order.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-
 class OrderRetrieveUpdateDeleteAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrieve the Order."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     ) 
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrieve the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                ) 
             
             if not Order.objects.filter(id=pk).exists():
                 return Response(
@@ -538,7 +518,7 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
                 )
             
             order = Order.objects.get(id=pk)
-            serializer = OrderSerializer(order)
+            serializer = OrderGetSerializer(order)
             # print(order)
             return Response(serializer.data, status=status.HTTP_200_OK)      
         except KeyError as e:
@@ -549,6 +529,12 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
 
     def put(self, request, pk):
         try:
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             # Check if the order exists
             order = Order.objects.filter(id=pk).first()
             if not order:
@@ -569,7 +555,7 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
             serializer.update(order, validated_data)
 
             # Return the updated data as a response
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({"message": f"Order Updated successfully."}, status=status.HTTP_200_OK)
 
         except KeyError as e:
             return Response(
@@ -584,12 +570,12 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
         
     def patch(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Order."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                )                
             if not Order.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Order Does not Exist."},
@@ -602,16 +588,21 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
             validated_data = serializer.validated_data
             serializer.partial_update(order, validated_data)
             # serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)      
+            return Response({"message": f"Order Updated successfully."}, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while updating the Order.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    # 
     def delete(self, request, pk):
         try:
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to delete the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                )  
             # Retrieve the order
             order = Order.objects.filter(id=pk).first()
             
@@ -642,20 +633,22 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
                 )
 
         except Exception as e:
-            logger.error(f"An exception occurred while deleting the order: {str(e)}")
+            # logger.error(f"An exception occurred while deleting the order: {str(e)}")
             return Response(
                 {"error": f"An error occurred while deleting the order: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-
-
-
 class OrderItemListCreateAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request):
-        try:            
+        try:   
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrive the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                )           
             order_item = OrderItem.objects.all()
             serializer = OrderItemSerializer(order_item, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)     
@@ -665,11 +658,16 @@ class OrderItemListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
 class OrderItemRetrieveUpdateDeleteAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, pk):
         try:
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrive the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             order_item = OrderItem.objects.filter(id=pk).first()
             if not order_item:
                 return Response(
@@ -678,7 +676,7 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
                 )
             serializer = OrderItemSerializer(order_item)
             # print(order)
-            return Response(serializer.data, status=status.HTTP_200_OK)      
+            return Response({"message": f"Order Item Updated successfully."}, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while Retriving the OrderItem.  {str(e)}"},
@@ -687,6 +685,12 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
 
     def put(self, request, pk):
         try:
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             # Check if the order_item exists
             order_item = OrderItem.objects.filter(id=pk).first()
             if not order_item:
@@ -707,7 +711,7 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
             serializer.update(order_item, validated_data)
 
             # Return the updated data as a response
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({"message": f"Order Item Updated successfully."}, status=status.HTTP_200_OK)
 
         except KeyError as e:
             return Response(
@@ -721,7 +725,13 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
             )
         
     def patch(self, request, pk):
-        try:              
+        try:     
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                )         
             if not OrderItem.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "OrderItem Does not Exist."},
@@ -734,7 +744,7 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
             validated_data = serializer.validated_data
             serializer.update(order_item, validated_data)
             # serializer.save()-
-            return Response(serializer.data, status=status.HTTP_200_OK)      
+            return Response({"message": f"Order Item Deleted successfully."}, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while updating the OrderItem.  {str(e)}"},
@@ -744,7 +754,13 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
     # 
     def delete(self, request, pk):  
         try:
-            # Retrieve the order
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to delete the Order."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            # Retrieve the orderItem
             order_item = OrderItem.objects.filter(id=pk).first()
             
             # Check if the order_item exists
@@ -763,7 +779,7 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
             if not OrderItem.objects.filter(id=pk).exists():
                 logger.debug(f"OrderItem with id {pk} successfully deleted.")
                 return Response(
-                    {"message": "OrderItem and related items were successfully deleted."},
+                    {"message": "OrderItem successfully deleted."},
                     status=status.HTTP_204_NO_CONTENT
                 )
             else:
@@ -774,24 +790,22 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
                 )
 
         except Exception as e:
-            logger.error(f"An exception occurred while deleting the order: {str(e)}")
+            logger.error(f"An exception occurred while deleting the orderItem: {str(e)}")
             return Response(
-                {"error": f"An error occurred while deleting the order: {str(e)}"},
+                {"error": f"An error occurred while deleting the orderItem: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-
 class CategoryListCreateAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, format=None):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrive the Category."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             # category = Category.objects.all()
             category = Category.objects.all().order_by('id')
             serializer = CategorySerializer(category, many=True)
@@ -799,43 +813,42 @@ class CategoryListCreateAPIView(APIView):
                       
         except KeyError as e:
             return Response(
-                {"error": f"An error occurred while Retriving the Supplier.  {str(e)}"},
+                {"error": f"An error occurred while Retriving the Category.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     def post(self, request, format=None):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to create the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to create the Category."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
             serializer = CategorySerializer(data=request.data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             validated_data = serializer.validated_data
             serializer.create(validated_data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"message": f"Category created successfully."}, status=status.HTTP_201_CREATED)
                       
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while creating the Category.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-        
+   
 class CategoryRetrieveUpdateDeleteAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    # permission_classes = (permissions.AllowAny,)
     def get(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to retrive the Category."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             if not Category.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Category Does not Exist."},
@@ -852,12 +865,12 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
 
     def put(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Category."},
+                    status=status.HTTP_403_FORBIDDEN
+                )                
             if not Category.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Category Does not Exist."},
@@ -869,7 +882,7 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             validated_data = serializer.validated_data
             serializer.update(category, validated_data)
-            return Response(serializer.data, status=status.HTTP_200_OK)      
+            return Response({"message": f"Category Updated successfully."}, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while updating the Category.  {str(e)}"},
@@ -878,12 +891,12 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
         
     def patch(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to update the Category."},
+                    status=status.HTTP_403_FORBIDDEN
+                )                
             if not Category.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Category Does not Exist."},
@@ -894,7 +907,7 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)      
+            return Response({"message": f"Category Updated successfully."}, status=status.HTTP_200_OK)      
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while updating the Category.  {str(e)}"},
@@ -903,12 +916,12 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
 
     def delete(self, request, pk):
         try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to delete the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
+            user = request.user
+            if not (user.role == 'Manager' or user.role == 'Salesman'):
+                return Response(
+                    {"error": "You are not authorized to delete the Category."},
+                    status=status.HTTP_403_FORBIDDEN
+                )                
             if not Category.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Product Does not Exist."},
@@ -916,8 +929,8 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 )
             Category.objects.get(id=pk).delete()
             if not Category.objects.filter(id=pk).exists():
-                return Response(
-                    status=status.HTTP_204_NO_CONTENT
+                return Response({"message": f"Category Deleted successfully."},
+                    status=status.HTTP_204_NO_CONTENT   
                 )
             else:
                 return Response(
@@ -926,157 +939,6 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 )      
         except KeyError as e:
             return Response(
-                {"error": f"An error occurred while Retriving the Supplier.  {str(e)}"},
+                {"error": f"An error occurred while Delete the Supplier.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-
-
-class TypeListCreateAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
-    def get(self, request, format=None):
-        try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )
-            # types = Type.objects.all()
-            types = Type.objects.all().order_by('id')
-            serializer = TypeSerializer(types, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)              
-                      
-        except KeyError as e:
-            return Response(
-                {"error": f"An error occurred while Retriving the Types.  {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def post(self, request, format=None):
-        try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to create the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )
-
-            serializer = TypeSerializer(data=request.data)
-            if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            validated_data = serializer.validated_data
-            serializer.create(validated_data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-                      
-        except KeyError as e:
-            return Response(
-                {"error": f"An error occurred while creating the Type.  {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        
-class TypeRetrieveUpdateDeleteAPIView(APIView):
-    permission_classes = (permissions.AllowAny,)
-    def get(self, request, pk):
-        try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to retrive the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )
-            if not Type.objects.filter(id=pk).exists():
-                return Response(
-                    {"error": "Type Does not Exist."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            types = Type.objects.get(id=pk)
-            serializer = TypeSerializer(types)
-            return Response(serializer.data, status=status.HTTP_200_OK)     
-        except KeyError as e:
-            return Response(
-                {"error": f"An error occurred while Retriving the Type.  {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def put(self, request, pk):
-        try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
-            if not Type.objects.filter(id=pk).exists():
-                return Response(
-                    {"error": "Type Does not Exist."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            types = Type.objects.get(id=pk)
-            serializer = TypeSerializer(data=request.data)
-            if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            validated_data = serializer.validated_data
-            serializer.update(types, validated_data)
-            return Response(serializer.data, status=status.HTTP_200_OK)      
-        except KeyError as e:
-            return Response(
-                {"error": f"An error occurred while updating the Type.  {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
-    def patch(self, request, pk):
-        try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to update the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
-            if not Type.objects.filter(id=pk).exists():
-                return Response(
-                    {"error": "Type Does not Exist."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            types = Type.objects.get(id=pk)    
-            serializer = TypeSerializer(types, data=request.data, partial=True)
-            if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)      
-        except KeyError as e:
-            return Response(
-                {"error": f"An error occurred while updating the Type.  {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def delete(self, request, pk):
-        try:
-            # user = request.user
-            # if not (user.role == 'Manager' or user.role == 'Salesman'):
-            #     return Response(
-            #         {"error": "You are not authorized to delete the Category."},
-            #         status=status.HTTP_403_FORBIDDEN
-            #     )                
-            if not Type.objects.filter(id=pk).exists():
-                return Response(
-                    {"error": "Type Does not Exist."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            Type.objects.get(id=pk).delete()
-            if not Type.objects.filter(id=pk).exists():
-                return Response(
-                    status=status.HTTP_204_NO_CONTENT
-                )
-            else:
-                return Response(
-                    {"error": "Failed to delete an Type."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )      
-        except KeyError as e:
-            return Response(
-                {"error": f"An error occurred while Retriving the Type.  {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
