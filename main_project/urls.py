@@ -14,34 +14,26 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-# from django.contrib import admin
-# from django.urls import path, include
-
-# urlpatterns = [
-#     path('admin/', admin.site.urls),
-#     path('api/', include('inventory.urls')),
-# ]
-
-
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.permissions import AllowAny
-
 from drf_yasg import openapi
-from drf_yasg.views import get_schema_view as swagger_get_schema_view
+from drf_yasg.views import get_schema_view
 
-schema_view = swagger_get_schema_view(
+
+schema_view = get_schema_view(
     openapi.Info(
-        title="Inventory and User API",
+        title="Your API",
         default_version='v1',
-        description="API for managing inventory",
+        description="API documentation with JWT token authentication",
     ),
     public=True,
-    permission_classes=[AllowAny],
+    permission_classes=(AllowAny,),
 )
+
 
 urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view()),
@@ -50,9 +42,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/user/', include('user.urls')),
     path('api/inventory/', include('inventory.urls')),
-    path('swagger/schema', schema_view.with_ui('swagger', cache_timeout=0), name='swagger-schema'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger-schema'),
 ]
-
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

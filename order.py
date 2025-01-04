@@ -1,17 +1,17 @@
 
-class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True)
-    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+# class OrderSerializer(serializers.ModelSerializer):
+#     items = OrderItemSerializer(many=True)
+#     total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
-    class Meta:
-        model = Order
-        fields = ['customer', 'status', 'order_date', 'total_amount', 'items']
-        # fields = ['customer', 'status', 'items']
-        extra_kwargs = {
-            # 'items': {'read_only': True}, # Make 'items' read-only
-            'total_amount': {'required': False},
-            'total_amount': {'read_only': True}, # Make 'total_amount' read-only
-        }
+#     class Meta:
+#         model = Order
+#         fields = ['customer', 'status', 'order_date', 'total_amount', 'items']
+#         # fields = ['customer', 'status', 'items']
+#         extra_kwargs = {
+#             # 'items': {'read_only': True}, # Make 'items' read-only
+#             'total_amount': {'required': False},
+#             'total_amount': {'read_only': True}, # Make 'total_amount' read-only
+#         }
 
     
 
@@ -72,28 +72,28 @@ class OrderSerializer(serializers.ModelSerializer):
     #     return order
 
 
-    def create(self, validated_data):
-        items_data = validated_data.pop('items')
+    # def create(self, validated_data):
+    #     items_data = validated_data.pop('items')
 
-        # Use a transaction to ensure atomicity
-        with transaction.atomic():
-            # Create the Order instance
-            order = Order.objects.create(**validated_data)
+    #     # Use a transaction to ensure atomicity
+    #     with transaction.atomic():
+    #         # Create the Order instance
+    #         order = Order.objects.create(**validated_data)
 
-            # Create each OrderItem
-            for item_data in items_data:
-                # This will call OrderItemSerializer.validate() for each item
-                product = item_data['product']
-                quantity = item_data['quantity']
+    #         # Create each OrderItem
+    #         for item_data in items_data:
+    #             # This will call OrderItemSerializer.validate() for each item
+    #             product = item_data['product']
+    #             quantity = item_data['quantity']
                 
-                # Reduce product stock
-                product.stock -= quantity
-                product.save()
+    #             # Reduce product stock
+    #             product.stock -= quantity
+    #             product.save()
 
-                # Create the OrderItem and associate with the Order
-                OrderItem.objects.create(order=order, **item_data)
+    #             # Create the OrderItem and associate with the Order
+    #             OrderItem.objects.create(order=order, **item_data)
 
-            return order
+    #         return order
     
     # def create(self, validated_data):
     #     """example_relationship = validated_data.pop('example_relationship')
