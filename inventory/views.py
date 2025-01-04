@@ -16,15 +16,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 from django.core.exceptions import ValidationError
+from drf_spectacular.utils import extend_schema
+
 
 
 
 class ProductListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="product-list-get")
     def get(self, request, format=None):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrive the Product."},
                     status=status.HTTP_403_FORBIDDEN
@@ -41,11 +44,11 @@ class ProductListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
- 
+    @extend_schema(operation_id="product-list-post")
     def post(self, request, format=None):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to create the Product."},
                     status=status.HTTP_403_FORBIDDEN
@@ -65,13 +68,15 @@ class ProductListCreateAPIView(APIView):
                 {"error": f"An error occurred while Creating the Product.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
+
 class ProductRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="product-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrive the Product."},
                     status=status.HTTP_403_FORBIDDEN
@@ -89,11 +94,11 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An error occurred while Retriving the Product.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
+    @extend_schema(operation_id="product-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Product."},
                     status=status.HTTP_403_FORBIDDEN
@@ -116,10 +121,11 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="product-retrive-details-update-patch")
     def patch(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Product."},
                     status=status.HTTP_403_FORBIDDEN
@@ -140,11 +146,11 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An error occurred while updating the Product.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
+    @extend_schema(operation_id="product-retrive-details-delete")
     def delete(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to delete the Product."},
                     status=status.HTTP_403_FORBIDDEN
@@ -170,16 +176,19 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 class SupplierListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="supplier-list-get")
     def get(self, request, format=None):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrive the Supplier."},
                     status=status.HTTP_403_FORBIDDEN
                 )
+            # print(user.role)
             supplier = Supplier.objects.all()
             serializer = SupplierSerializer(supplier, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)                            
@@ -189,20 +198,22 @@ class SupplierListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="supplier-list-post")
     def post(self, request, format=None):
         try:
             user = request.user
-            if (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to create the Supplier."},
                     status=status.HTTP_403_FORBIDDEN
                 ) 
+            print(user.role)
             serializer = SupplierSerializer(data=request.data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             validated_data = serializer.validated_data
-            print(validated_data)
+            # print(validated_data)
             serializer.create(validated_data)
             return Response({"message": "Supplier created successfully."}, status=status.HTTP_201_CREATED) 
         except KeyError as e:
@@ -211,12 +222,14 @@ class SupplierListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
+
 class SupplierRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="supplier-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrive the Supplier."},
                     status=status.HTTP_403_FORBIDDEN
@@ -235,10 +248,11 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="supplier-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Supplier."},
                     status=status.HTTP_403_FORBIDDEN
@@ -261,10 +275,11 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="supplier-retrive-details-update-patch")
     def patch(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Supplier."},
                     status=status.HTTP_403_FORBIDDEN
@@ -286,10 +301,11 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="supplier-retrive-details-delete")
     def delete(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to delete the Supplier."},
                     status=status.HTTP_403_FORBIDDEN
@@ -316,12 +332,14 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 class CustomerListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="customer-list-get")
     def get(self, request, format=None):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrive the Customers."},
                     status=status.HTTP_403_FORBIDDEN
@@ -335,10 +353,11 @@ class CustomerListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="customer-list-post")
     def post(self, request, format=None):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to create the Customer."},
                     status=status.HTTP_403_FORBIDDEN
@@ -355,12 +374,14 @@ class CustomerListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
+
 class CustomerRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="customer-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrive the Customer."},
                     status=status.HTTP_403_FORBIDDEN
@@ -379,10 +400,11 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="customer-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Customer."},
                     status=status.HTTP_403_FORBIDDEN
@@ -404,11 +426,12 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An error occurred while updating the Customer.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
+    @extend_schema(operation_id="customer-retrive-details-update-patch")        
     def patch(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Customer."},
                     status=status.HTTP_403_FORBIDDEN
@@ -430,10 +453,11 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="customer-retrive-details-delete")
     def delete(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to delete the Customer."},
                     status=status.HTTP_403_FORBIDDEN
@@ -459,12 +483,14 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 class OrderListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="order-list-get")
     def get(self, request, format=None):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrieve the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -478,10 +504,11 @@ class OrderListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="order-list-post")
     def post(self, request, format=None):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to create the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -500,12 +527,14 @@ class OrderListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 class OrderRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="order-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrieve the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -527,10 +556,11 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="order-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -567,11 +597,12 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An unexpected error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
+    @extend_schema(operation_id="order-retrive-details-update-patch")  
     def patch(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -595,10 +626,11 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="order-retrive-details-delete")
     def delete(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to delete the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -639,12 +671,14 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 class OrderItemListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="order-item-list-get")
     def get(self, request):
         try:   
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrive the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -658,12 +692,14 @@ class OrderItemListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 class OrderItemRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="order-item-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrive the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -683,10 +719,11 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="order-item-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -723,11 +760,12 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An unexpected error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
+    @extend_schema(operation_id="order-item-retrive-details-update-patch")   
     def patch(self, request, pk):
         try:     
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -751,11 +789,12 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    # 
+
+    @extend_schema(operation_id="order-item-retrive-details-delete")
     def delete(self, request, pk):  
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to delete the Order."},
                     status=status.HTTP_403_FORBIDDEN
@@ -796,12 +835,14 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 class CategoryListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="category-list-get")
     def get(self, request, format=None):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrive the Category."},
                     status=status.HTTP_403_FORBIDDEN
@@ -817,10 +858,11 @@ class CategoryListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="category-list-post")
     def post(self, request, format=None):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to create the Category."},
                     status=status.HTTP_403_FORBIDDEN
@@ -839,12 +881,14 @@ class CategoryListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
    
+
 class CategoryRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
+    @extend_schema(operation_id="category-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to retrive the Category."},
                     status=status.HTTP_403_FORBIDDEN
@@ -863,10 +907,11 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="category-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Category."},
                     status=status.HTTP_403_FORBIDDEN
@@ -889,10 +934,11 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
+    @extend_schema(operation_id="category-retrive-details-update-patch")
     def patch(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to update the Category."},
                     status=status.HTTP_403_FORBIDDEN
@@ -914,10 +960,11 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @extend_schema(operation_id="category-retrive-details-delete")
     def delete(self, request, pk):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.role == 'Salesman'):
+            if not (user.role == 'Manager' or user.is_superuser == True or user.role == 'Salesman'):
                 return Response(
                     {"error": "You are not authorized to delete the Category."},
                     status=status.HTTP_403_FORBIDDEN

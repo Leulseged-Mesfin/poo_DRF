@@ -168,6 +168,22 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"'
+        }
+    },
+    'USE_SESSION_AUTH': False,  # Disable session auth if only using JWT
+    'DEFAULT_API_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -177,15 +193,23 @@ REST_FRAMEWORK = {
     ]
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': False,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',)
 
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=300),  # Short lifespan for access tokens to reduce security risks.
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Longer lifespan for refresh tokens to enhance user experience.
+    'ROTATE_REFRESH_TOKENS': False,                  # Rotate refresh tokens to improve security by invalidating old tokens.
+    'BLACKLIST_AFTER_ROTATION': False,               # Blacklist old refresh tokens after rotation to prevent reuse.
+    'AUTH_HEADER_TYPES': ('Bearer',),               # Use "Bearer" schema for authorization headers.
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),  # Standard AccessToken class for JWT.
+    'TOKEN_USER_CLASS': 'myapp.models.CustomUser',  # Optional: Customize to point to your user model, if needed.
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=15), # Optional: Configure sliding tokens if used.
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7), # Optional: Refresh sliding tokens within this duration.
+    'SIGNING_KEY': 'your-strong-secret-key',        # Use a strong secret key for signing tokens.
+    'ALGORITHM': 'HS256',                           # Default signing algorithm.
+    'ISSUER': 'user',                      # Optional: Add issuer information for token validation.
 }
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
