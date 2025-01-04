@@ -16,14 +16,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 from django.core.exceptions import ValidationError
-from drf_spectacular.utils import extend_schema
 
 
 
 
 class ProductListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="product-list-get")
     def get(self, request, format=None):
         try:
             user = request.user
@@ -44,7 +42,6 @@ class ProductListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="product-list-post")
     def post(self, request, format=None):
         try:
             user = request.user
@@ -72,7 +69,6 @@ class ProductListCreateAPIView(APIView):
 
 class ProductRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="product-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
@@ -94,7 +90,6 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An error occurred while Retriving the Product.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    @extend_schema(operation_id="product-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
@@ -121,7 +116,6 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="product-retrive-details-update-patch")
     def patch(self, request, pk):
         try:
             user = request.user
@@ -146,7 +140,6 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An error occurred while updating the Product.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    @extend_schema(operation_id="product-retrive-details-delete")
     def delete(self, request, pk):
         try:
             user = request.user
@@ -179,7 +172,6 @@ class ProductRetrieveUpdateDeleteAPIView(APIView):
 
 class SupplierListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="supplier-list-get")
     def get(self, request, format=None):
         try:
             user = request.user
@@ -198,7 +190,6 @@ class SupplierListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="supplier-list-post")
     def post(self, request, format=None):
         try:
             user = request.user
@@ -225,7 +216,6 @@ class SupplierListCreateAPIView(APIView):
 
 class SupplierRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="supplier-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
@@ -248,7 +238,6 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="supplier-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
@@ -275,7 +264,6 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="supplier-retrive-details-update-patch")
     def patch(self, request, pk):
         try:
             user = request.user
@@ -301,7 +289,6 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="supplier-retrive-details-delete")
     def delete(self, request, pk):
         try:
             user = request.user
@@ -335,7 +322,6 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
 
 class CustomerListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="customer-list-get")
     def get(self, request, format=None):
         try:
             user = request.user
@@ -353,7 +339,6 @@ class CustomerListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="customer-list-post")
     def post(self, request, format=None):
         try:
             user = request.user
@@ -377,7 +362,6 @@ class CustomerListCreateAPIView(APIView):
 
 class CustomerRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="customer-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
@@ -400,7 +384,6 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="customer-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
@@ -426,8 +409,7 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An error occurred while updating the Customer.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-    @extend_schema(operation_id="customer-retrive-details-update-patch")        
+       
     def patch(self, request, pk):
         try:
             user = request.user
@@ -453,7 +435,6 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="customer-retrive-details-delete")
     def delete(self, request, pk):
         try:
             user = request.user
@@ -486,7 +467,6 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
 
 class OrderListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="order-list-get")
     def get(self, request, format=None):
         try:
             user = request.user
@@ -504,7 +484,6 @@ class OrderListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="order-list-post")
     def post(self, request, format=None):
         try:
             user = request.user
@@ -530,7 +509,6 @@ class OrderListCreateAPIView(APIView):
 
 class OrderRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="order-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
@@ -556,7 +534,6 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="order-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
@@ -597,8 +574,7 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An unexpected error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-    @extend_schema(operation_id="order-retrive-details-update-patch")  
+ 
     def patch(self, request, pk):
         try:
             user = request.user
@@ -626,7 +602,7 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="order-retrive-details-delete")
+
     def delete(self, request, pk):
         try:
             user = request.user
@@ -674,7 +650,6 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
 
 class OrderItemListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="order-item-list-get")
     def get(self, request):
         try:   
             user = request.user
@@ -695,7 +670,6 @@ class OrderItemListCreateAPIView(APIView):
 
 class OrderItemRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="order-item-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
@@ -719,7 +693,6 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="order-item-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
@@ -760,8 +733,7 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
                 {"error": f"An unexpected error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-    @extend_schema(operation_id="order-item-retrive-details-update-patch")   
+  
     def patch(self, request, pk):
         try:     
             user = request.user
@@ -789,8 +761,6 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-    @extend_schema(operation_id="order-item-retrive-details-delete")
     def delete(self, request, pk):  
         try:
             user = request.user
@@ -838,7 +808,6 @@ class OrderItemRetrieveUpdateDeleteAPIView(APIView):
 
 class CategoryListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="category-list-get")
     def get(self, request, format=None):
         try:
             user = request.user
@@ -858,7 +827,6 @@ class CategoryListCreateAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="category-list-post")
     def post(self, request, format=None):
         try:
             user = request.user
@@ -884,7 +852,6 @@ class CategoryListCreateAPIView(APIView):
 
 class CategoryRetrieveUpdateDeleteAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    @extend_schema(operation_id="category-retrive-details-get")
     def get(self, request, pk):
         try:
             user = request.user
@@ -907,7 +874,6 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="category-retrive-details-update-put")
     def put(self, request, pk):
         try:
             user = request.user
@@ -934,7 +900,6 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
-    @extend_schema(operation_id="category-retrive-details-update-patch")
     def patch(self, request, pk):
         try:
             user = request.user
@@ -960,7 +925,6 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @extend_schema(operation_id="category-retrive-details-delete")
     def delete(self, request, pk):
         try:
             user = request.user

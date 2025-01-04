@@ -5,16 +5,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from django.contrib.auth.hashers import check_password
-from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.utils import swagger_auto_schema
 
 
 class UserListCreateAPIView(APIView):
-    # permission_classes = (permissions.AllowAny,)
-    # permission_classes = [IsAuthenticated]    
-    # @extend_schema(operation_id="user-list-get")
+    # permission_classes = (permissions.AllowAny,)   
     # authentication_classes = [JWTAuthentication]
     # permission_classes = [IsAuthenticated]
 
@@ -49,7 +46,6 @@ class UserListCreateAPIView(APIView):
                 
             )
 
-    # @extend_schema(operation_id="user-list-post")
     def post(self, request):
         try:
             user = request.user
@@ -102,7 +98,7 @@ class UserRetrieveUpdateDeleteAPIView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     # permission_classes = (permissions.AllowAny,)
-    # @extend_schema(operation_id="user-retrive-details-get")
+
     def get(self, request, pk):
         try:
             user = request.user
@@ -126,7 +122,6 @@ class UserRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    # @extend_schema(operation_id="user-retrive-details-update")
     def patch(self, request, pk):
         try:
             user = request.user
@@ -157,7 +152,6 @@ class UserRetrieveUpdateDeleteAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    # @extend_schema(operation_id="user-retrive-details-delete")
     def delete(self, request, pk):
         try:
             user = request.user
@@ -192,7 +186,6 @@ class UserRetrieveUpdateDeleteAPIView(APIView):
 
 class UserProfileView(APIView):
     # permission_classes = (permissions.AllowAny,)
-    # @extend_schema(operation_id="user-retrive-profile")
     def get(self, request, format=None):
         try:
             user = request.user
@@ -215,7 +208,6 @@ class UserProfileView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR               
             )
     
-    # @extend_schema(operation_id="user-update-profile")
     def patch(self, request, format=None):
         try:
             user = request.user
@@ -233,7 +225,6 @@ class UserProfileView(APIView):
 
 
 class UserChangePassword(APIView):
-    # @extend_schema(operation_id="user-change-password")
     def post(self, request, format=None):
         try:
             user = request.user  # This gives the actual User model instance
