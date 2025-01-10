@@ -189,22 +189,16 @@ class UserProfileView(APIView):
     def get(self, request, format=None):
         try:
             user = request.user
-            if not (user.role == 'Manager' or user.is_superuser == True):
-                return Response(
-                    {"error": "You are not authorized to retrive the User."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            # user = request.user
-            user = UserSerializer(user)
+            users = UserSerializer(user)
             
             return Response(
-                {'user': user.data},
+                {'data': users.data},
                 status=status.HTTP_200_OK
             )
 
-        except:
+        except KeyError as e:
             return Response(
-                {"error": "An error occurred while retriving User Detail."},
+                {"error": f"An error occurred while retriving Profile. {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR               
             )
     

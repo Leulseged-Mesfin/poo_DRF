@@ -297,6 +297,7 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                     {"error": "You are not authorized to delete the Supplier."},
                     status=status.HTTP_403_FORBIDDEN
                 )  
+
             if not Supplier.objects.filter(id=pk).exists():
                 return Response(
                     {"error": "Supplier Does not Exist."},
@@ -315,7 +316,7 @@ class SupplierRetrieveUpdateDeleteAPIView(APIView):
                     
         except KeyError as e:
             return Response(
-                {"error": f"An error occurred while Deleting the Supplier.  {str(e)}"},
+                {"error": f"An error occurred while Deleting the Supplier.{str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
