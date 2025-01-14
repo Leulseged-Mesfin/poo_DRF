@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
+from django.db.models import Sum, Count
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import Product, Supplier, Order, OrderItem, Category, CustomerInfo
+from .models import Product, Supplier, Order, OrderItem, Category, CustomerInfo, Revenue
 from .serializers import (
     ProductPostSerializer, 
     ProductGetSerializer, 
@@ -11,6 +12,7 @@ from .serializers import (
     OrderItemSerializer, 
     CategorySerializer, 
     CustomerInfoSerializer
+    # RevenueSerializer
 )
 import logging
 
@@ -952,5 +954,25 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while Delete the Supplier.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class RetriveRevenueAPIView(APIView):
+    def get(self, request):
+        try:
+            user = request.user
+            if not (user.role == 'Manager' or user.is_superuser == True):
+                return Response(
+                    {"error": "You are not authorized to retrive the Revenue."},
+                    status=status.HTTP_403_FORBIDDEN
+                ) 
+
+            # revenue = Order.objects.aggregate(total_revenue=Sum('total_amount'))        
+            revenue = OrderItem.objects.aggregate(total_revenue=Sum('price'))        
+            return Response(revenue, status=status.HTTP_200_OK)         
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while Retriving the Revenue.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

@@ -65,6 +65,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     mobile = models.CharField(max_length=255, null=True,blank=True)
     is_active = models.BooleanField(default=True)    
     is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
     emp_no=models.CharField(max_length=100,null=True,blank=True)
     gender=models.CharField(max_length=100,null=True, blank=True, choices=gender_category)
     age= models.IntegerField(default='0', blank=True, null=True)
