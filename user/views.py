@@ -12,8 +12,6 @@ from drf_yasg.utils import swagger_auto_schema
 
 class UserListCreateAPIView(APIView):
     # permission_classes = (permissions.AllowAny,)   
-    # authentication_classes = [JWTAuthentication]
-    # permission_classes = [IsAuthenticated]
 
     # @swagger_auto_schema(
     #     operation_description="A sample API view that requires JWT",
@@ -63,22 +61,26 @@ class UserListCreateAPIView(APIView):
             role = data.get('role')
 
             if not all([name, email, password, re_password, role]):
+                print("All fields are required.")
                 return Response(
                     {"error": "All fields are required."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
             if password != re_password:
+                print("Passwords do not match.")
                 return Response(
                     {"error": "Passwords do not match."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             if len(password) < 8:
+                print("Password should be at least 8 characters long.")
                 return Response(
                     {"error": "Password should be at least 8 characters long."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             if User.objects.filter(email=email).exists():
+                print("User with this email already exists.")
                 return Response(
                     {"error": "User with this email already exists."},
                     status=status.HTTP_400_BAD_REQUEST
@@ -86,7 +88,7 @@ class UserListCreateAPIView(APIView):
 
             User.objects.create_stuff(email, name, password, role)
             return Response(
-                {"message": f"{role} account created successfully."},
+                {"message": f"{user.role} account created successfully."},
                 status=status.HTTP_201_CREATED
             )
            
@@ -95,8 +97,6 @@ class UserListCreateAPIView(APIView):
 
 
 class UserRetrieveUpdateDeleteAPIView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
     # permission_classes = (permissions.AllowAny,)
 
     def get(self, request, pk):
@@ -144,7 +144,7 @@ class UserRetrieveUpdateDeleteAPIView(APIView):
                 print(serializer.errors)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
-            return Response({"message": f"{role} account Updated successfully."}, status=status.HTTP_200_OK)
+            return Response({"message": f"{user.role} account Updated successfully."}, status=status.HTTP_200_OK)
      
         except KeyError as e:
             return Response(
@@ -168,7 +168,7 @@ class UserRetrieveUpdateDeleteAPIView(APIView):
                 )
             User.objects.get(id=pk).delete()
             if not User.objects.filter(id=pk).exists():
-                return Response({"message": f"{role} account Deleted successfully."},
+                return Response({"message": f"{user.role} account Deleted successfully."},
                     status=status.HTTP_204_NO_CONTENT
                 )
             else:

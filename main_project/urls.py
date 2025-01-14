@@ -15,13 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.permissions import AllowAny
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
+from django.views.generic import TemplateView
 
 
 schema_view = get_schema_view(
@@ -43,6 +44,7 @@ urlpatterns = [
     path('auth/user/', include('user.urls')),
     path('api/inventory/', include('inventory.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger-schema'),
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html'), name='index'),
 ]
 
 if settings.DEBUG:

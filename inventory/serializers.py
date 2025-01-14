@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Supplier, Order, OrderItem, CustomerInfo,  Category
+from .models import Product, Supplier, Order, OrderItem, CustomerInfo,  Category, Revenue
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.db.models import UniqueConstraint
@@ -39,7 +39,6 @@ class CustomerInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerInfo
         fields = '__all__'
-
 
 class OrderItemSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)  # Read-only
@@ -92,8 +91,6 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
         return instance
 
-
-
 class OrderGetSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
     total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
@@ -108,9 +105,6 @@ class OrderGetSerializer(serializers.ModelSerializer):
             'total_amount': {'required': False},
             'total_amount': {'read_only': True}, # Make 'total_amount' read-only
         }
-
-
-
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
@@ -189,3 +183,9 @@ class OrderSerializer(serializers.ModelSerializer):
         
         # If items are not provided, do not alter the existing items
         return instance
+
+# class RevenueSerializer(serializers.ModelSerializer):
+
+#     class Meta:
+#         model = Revenue
+#         fields = '__all__'

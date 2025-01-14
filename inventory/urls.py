@@ -16,7 +16,9 @@ from .views import (
     CustomerRetrieveUpdateDeleteAPIView,
 
     CategoryListCreateAPIView,
-    CategoryRetrieveUpdateDeleteAPIView
+    CategoryRetrieveUpdateDeleteAPIView,
+
+    RetriveRevenueAPIView
   
 )
 
@@ -37,5 +39,7 @@ urlpatterns = [
     path('customers/<pk>', CustomerRetrieveUpdateDeleteAPIView.as_view(), name='customers-retrieve'),
 
     path('category', CategoryListCreateAPIView.as_view(), name='category-list'),
-    path('category/<pk>', CategoryRetrieveUpdateDeleteAPIView.as_view(), name='category-retrieve')
+    path('category/<pk>', CategoryRetrieveUpdateDeleteAPIView.as_view(), name='category-retrieve'),
+
+    path('revenue/', RetriveRevenueAPIView.as_view(), name='revenue-retrieve'),
 ]

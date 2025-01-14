@@ -4,9 +4,6 @@ from django.db.models.signals import post_save, post_delete, pre_save
 from django.db.models import UniqueConstraint
 from django.core.exceptions import ValidationError
 
-
-
-
 class Category(models.Model):
     name = models.CharField(max_length=100, default='', unique=True)
 
@@ -78,6 +75,13 @@ class OrderItem(models.Model):
     def get_price(self):
         """Calculate the total price of this item."""
         return self.product.selling_price * self.quantity
+
+
+class Revenue(models.Model):
+    revenue = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return self.revenue
 
 
 @receiver(pre_save, sender=OrderItem)
