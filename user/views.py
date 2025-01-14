@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from django.contrib.auth.hashers import check_password
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.utils import swagger_auto_schema
 
@@ -219,6 +219,15 @@ class UserProfileView(APIView):
 
 
 class UserChangePassword(APIView):
+    def get(self, request, *args, **kwargs):
+        # permission_classes = (permissions.AllowAny,) 
+        user = request.user  # This gives the actual User model instance
+        if not user.is_authenticated:
+            return Response(
+                {"error": "User is not authenticated."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        return Response({"message": "GET request is working"}, status=200)
     def post(self, request, format=None):
         try:
             user = request.user  # This gives the actual User model instance

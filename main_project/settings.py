@@ -15,7 +15,7 @@ import os
 from datetime import timedelta
 # import django_heroku
 from dotenv import load_dotenv
-import dj_database_url
+# import dj_database_url
 
  # Load environment variables from .env file
 load_dotenv()
@@ -34,7 +34,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(" ")
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.8.169', '192.168.189.180', '192.168.137.133', '192.168.144.180', '192.168.137.216', '192.168.155.180', '192.168.155.244', 'poo-drf.onrender.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.8.169', '192.168.189.180', '192.168.137.133', '192.168.144.180', '192.168.137.216', '192.168.155.180', '192.168.155.244', 'poo-drf.onrender.com', '192.168.8.106']
 
 # Application definition
 
@@ -118,8 +118,8 @@ DATABASES = {
         'PORT':'3306',
     }
 }
-database_url = os.getenv('DATABASE_URL')
-DATABASES['default'] = dj_database_url.parse(database_url)
+# database_url = os.getenv('DATABASE_URL')
+# DATABASES['default'] = dj_database_url.parse(database_url)
 
 
 # Password validation
