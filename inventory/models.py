@@ -39,6 +39,7 @@ class Product(models.Model):
 class CustomerInfo(models.Model):
     name = models.CharField(max_length=255, default="Customer", null=True, blank=True)
     phone = models.CharField(max_length=255, null=True, blank=True, default="")
+    tin_number = models.CharField(max_length=255, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
 
     def __str__(self):

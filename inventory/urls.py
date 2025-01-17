@@ -18,7 +18,8 @@ from .views import (
     CategoryListCreateAPIView,
     CategoryRetrieveUpdateDeleteAPIView,
 
-    RetriveRevenueAPIView
+    RetriveRevenueAPIView,
+    ExcelReportAPIView
   
 )
 
@@ -42,4 +43,5 @@ urlpatterns = [
     path('category/<pk>', CategoryRetrieveUpdateDeleteAPIView.as_view(), name='category-retrieve'),
 
     path('revenue/', RetriveRevenueAPIView.as_view(), name='revenue-retrieve'),
+    path('report/', ExcelReportAPIView.as_view(), name='report-retrieve'),
 ]

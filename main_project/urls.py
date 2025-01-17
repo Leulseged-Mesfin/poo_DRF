@@ -44,7 +44,8 @@ urlpatterns = [
     path('auth/user/', include('user.urls')),
     path('api/inventory/', include('inventory.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger-schema'),
-    re_path(r'^.*$', TemplateView.as_view(template_name='index.html'), name='index'),
+    re_path(r'^(?!api/|admin/|swagger/|auth/|media/).*$', TemplateView.as_view(template_name='index.html'), name='index'),
+    # re_path(r'^.*$', TemplateView.as_view(template_name='index.html'), name='index'),
 ]
 
 if settings.DEBUG:

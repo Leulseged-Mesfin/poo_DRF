@@ -20,7 +20,6 @@ class ProductGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        # fields = '__all__'
         fields = ['id', 'name', 'category_name', 'description', 'buying_price', 'selling_price', 'stock', 'supplier_name', 'image']
         constraints = [
             UniqueConstraint(fields=['name', 'category_name'], name='unique_product_category')
@@ -62,7 +61,6 @@ class OrderItemSerializer(serializers.ModelSerializer):
         if product.stock < quantity:
             raise serializers.ValidationError(f"Insufficient stock for {product.name}. Available stock is {product.stock}, but {quantity} was requested.")
         return data
-    
 
     def update(self, instance, validated_data):
         # Update order fields directly
@@ -98,13 +96,25 @@ class OrderGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['customer', 'status', 'order_date', 'total_amount', 'items']
+        fields = ['id', 'customer', 'status', 'order_date', 'total_amount', 'items']
         # fields = ['customer', 'status', 'items']
         extra_kwargs = {
             # 'items': {'read_only': True}, # Make 'items' read-only
             'total_amount': {'required': False},
             'total_amount': {'read_only': True}, # Make 'total_amount' read-only
         }
+
+class OrderItemReportSerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='order.customer.name', read_only=True)
+    customer_phone = serializers.CharField(source='order.customer.phone', read_only=True)
+    customer_tin_number = serializers.CharField(source='order.customer.tin_number', read_only=True)
+    order_date = serializers.DateTimeField(source='order.order_date', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_price = serializers.DecimalField(source='product.selling_price', max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ['customer_name', 'customer_phone', 'customer_tin_number', 'order_date', 'product_name', 'product_price', 'quantity', 'price']
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
@@ -183,9 +193,3 @@ class OrderSerializer(serializers.ModelSerializer):
         
         # If items are not provided, do not alter the existing items
         return instance
-
-# class RevenueSerializer(serializers.ModelSerializer):
-
-#     class Meta:
-#         model = Revenue
-#         fields = '__all__'

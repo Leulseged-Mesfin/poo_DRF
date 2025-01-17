@@ -10,16 +10,14 @@ from .serializers import (
     OrderGetSerializer, 
     OrderSerializer, 
     OrderItemSerializer, 
+    OrderItemReportSerializer,
     CategorySerializer, 
     CustomerInfoSerializer
-    # RevenueSerializer
 )
 import logging
 
 logger = logging.getLogger(__name__)
 from django.core.exceptions import ValidationError
-
-
 
 
 class ProductListCreateAPIView(APIView):
@@ -448,7 +446,7 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 )               
             if not CustomerInfo.objects.filter(id=pk).exists():
                 return Response(
-                    {"error": "Product Does not Exist."},
+                    {"error": "Customer Does not Exist."},
                     status=status.HTTP_404_NOT_FOUND
                 )
             CustomerInfo.objects.get(id=pk).delete()
@@ -458,7 +456,7 @@ class CustomerRetrieveUpdateDeleteAPIView(APIView):
                 )
             else:
                 return Response(
-                    {"error": "Failed to delete an Product."},
+                    {"error": "Failed to delete an Customer."},
                     status=status.HTTP_400_BAD_REQUEST
                 )      
         except KeyError as e:
@@ -523,7 +521,7 @@ class OrderRetrieveUpdateDeleteAPIView(APIView):
             
             if not Order.objects.filter(id=pk).exists():
                 return Response(
-                    {"error": "Product Does not Exist."},
+                    {"error": "Customer Does not Exist."},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
@@ -938,7 +936,7 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 )                
             if not Category.objects.filter(id=pk).exists():
                 return Response(
-                    {"error": "Product Does not Exist."},
+                    {"error": "Customer Does not Exist."},
                     status=status.HTTP_404_NOT_FOUND
                 )
             Category.objects.get(id=pk).delete()
@@ -948,7 +946,7 @@ class CategoryRetrieveUpdateDeleteAPIView(APIView):
                 )
             else:
                 return Response(
-                    {"error": "Failed to delete an Product."},
+                    {"error": "Failed to delete an Customer."},
                     status=status.HTTP_400_BAD_REQUEST
                 )      
         except KeyError as e:
@@ -974,5 +972,25 @@ class RetriveRevenueAPIView(APIView):
         except KeyError as e:
             return Response(
                 {"error": f"An error occurred while Retriving the Revenue.  {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class ExcelReportAPIView(APIView):
+    def get(self, request):
+        try:
+            user = request.user
+            if not (user.role == 'Manager' or user.is_superuser == True):
+                return Response(
+                    {"error": "You are not authorized to retrive the Receipt."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            order_items = OrderItem.objects.select_related('order__customer', 'product')
+            serializer = OrderItemReportSerializer(order_items, many=True)
+            return Response(serializer.data)
+
+        except KeyError as e:
+            return Response(
+                {"error": f"An error occurred while Retriving the Receipt.  {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
